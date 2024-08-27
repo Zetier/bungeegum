@@ -1,0 +1,7 @@
+*.apk
+*.so
+.gradle
+build
+bungeegum.egg-info
+gradle_out/
+venv

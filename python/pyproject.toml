@@ -1,14 +1,14 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=64.0", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "bungeegum"
-version = "0.1.0"
+dynamic = ["version"]
 authors = [{ name = "Zetier" }]
 description = "A set of tools to test payloads within the context of a standard Android application"
 readme = "README.md"
-dependencies = ['adbutils==2.7.*', 'frida==16.4.*', 'importlib_resources==6.4.*']
+dependencies = ['adbutils==2.7.*', 'frida==16.4.10', 'importlib_resources==6.4.*']
 requires-python = ">=3.8"
 
 classifiers = [
@@ -28,8 +28,20 @@ keywords = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/Zetier/bungeegum"
-"Bug Tracker" = "https://github.com/Zetier/bungeegum/issues"
+Repository = "https://github.com/Zetier/bungeegum"
+Issues = "https://github.com/Zetier/bungeegum/issues"
 
 [project.scripts]
-bungeegum = "bungeegum.bungeegum:main"
+bungeegum = "bungeegum.bg:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+bungeegum = ["*.js", "*.apk"]
+
+[tool.setuptools_scm]
+version_file= "src/bungeegum/_version.py"
+root = ".."
+version_scheme = "only-version"
+local_scheme = "no-local-version"

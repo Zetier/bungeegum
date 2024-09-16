@@ -1,7 +1,10 @@
 *.apk
 *.so
+*venv
 .gradle
+__pycache__
+_version.py
 build
 bungeegum.egg-info
+dist
 gradle_out/
-venv

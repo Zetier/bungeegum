@@ -1,9 +1,8 @@
-.PHONY: dev app python all clean dist-clean test
+.PHONY: dev app all clean docker-clean test package
 
 .DEFAULT_GOAL := all
 
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-VERSION := 0.1.0
 
 PKG_NAME := com.zetier.bungeegum
 APK := $(PKG_NAME)-debug.apk
@@ -11,7 +10,9 @@ LIB_DEPS := build/dep/lib
 GRADLE_BUILD := gradle assembleDebug -g gradle_out
 APK_PATH := $(ROOT_DIR)/android_app/$(PKG_NAME)/build/outputs/apk/debug/$(APK)
 FRIDA_DOWNLOADS := https://github.com/frida/frida/releases/download
-FRIDA_VERSION := 16.4.10
+PYPROJECT := python/pyproject.toml
+FRIDA_VERSION := $(shell grep "frida==" $(PYPROJECT) | sed -n 's/.*frida==\([0-9\.]*\).*/\1/p')
+VERSION := $(shell python -m setuptools_scm -c $(PYPROJECT))
 
 GADGET_ARM_SO := frida-gadget-$(FRIDA_VERSION)-android-arm.so
 GADGET_ARM64_SO := frida-gadget-$(FRIDA_VERSION)-android-arm64.so
@@ -48,7 +49,7 @@ bungeegum/$(APK): $(APK_PATH)
 	@cp $(APK_PATH) python/src/bungeegum/
 
 build:
-	@mkdir -p build
+	@mkdir -p $(ROOT_DIR)/build
 
 build/.dockerfile_timestamp : Dockerfile | build
 	@touch build/.dockerfile_timestamp
@@ -58,39 +59,66 @@ dev: build/.dockerfile_timestamp
 
 app: bungeegum/$(APK)
 
-python:
-	VERSION=$(VERSION) FRIDA_VERSION=$(FRIDA_VERSION) python3 -m pip install ./python
+dist:
+	@mkdir -p $(ROOT_DIR)/dist
 
+dist/bungeegum-$(VERSION)-py3-none-any.whl dist/bungeegum-$(VERSION).tar.gz: app | dist
+	python3 -m build --outdir dist python/
+
+package: dist/bungeegum-$(VERSION)-py3-none-any.whl dist/bungeegum-$(VERSION).tar.gz
+
+.PHONY: package-test-setup
+package-test-setup: package
+	-rm -rf $(ROOT_DIR)/$(VERSION)_venv
+	python3 -m venv $(ROOT_DIR)/$(VERSION)_venv
+	"$(ROOT_DIR)"/"$(VERSION)_venv"/bin/python3 -m pip install $(ROOT_DIR)/dist/*.whl
+
+.PHONY: test-package
+test-package: package-test-setup
+	$(call run_tests, "$(ROOT_DIR)"/"$(VERSION)_venv"/bin/bungeegum)
 
 TEST_COMMANDS = \
-	"bungeegum --elf $(TEST_DIR)/exit42_arm64-v8a" \
-	"bungeegum --shellcode $(TEST_DIR)/exit42_arm64-v8a.bin" \
-	"bungeegum --remote --elf /system/bin/sh --args -c 'return 42;'"
+	"--version && sh -c 'exit 42'" \
+	"--elf $(TEST_DIR)/exit42_arm64-v8a" \
+	"--shellcode $(TEST_DIR)/exit42_arm64-v8a.bin" \
+	"--remote --elf /system/bin/sh --args -c 'return 42;'"
 
-test:
+define run_tests
 	@if ! out=$$(adb shell getprop ro.product.cpu.abi) || ! [ $$out = arm64-v8a ]; then \
 		echo "A single arm64-v8a device must be attached via adb to run tests"; \
 		exit 1; \
 	fi
+	@-adb uninstall $(PKG_NAME);
 	@for cmd in $(TEST_COMMANDS); do \
-		eval $$cmd; \
+		eval "$(1) $$cmd"; \
 		ret=$$?; \
 		if [ $$ret -ne 42 ]; then \
 			echo "$$cmd returned $$ret"; \
 			exit 1; \
 		fi; \
 	done
+endef
+
+test:
+	$(call run_tests, "bungeegum")
+
+CLEAN_PATHS = \
+	"$(APP_JNI_DIR)/*" \
+	"android_app/$(PKG_NAME)/build" \
+	"android_app/.gradle" \
+	"android_app/gradle_out" \
+	"build" \
+	"dist" \
+	"python/src/__pycache__" \
+	"python/src/bungeegum.egg-info" \
+	"python/src/bungeegum/$(APK)"
 
 clean:
-	rm -rf android_app/$(PKG_NAME)/build
-	rm -rf android_app/.gradle
-	rm -rf android_app/gradle_out
-	rm -rf $(APP_JNI_DIR)/*
-	rm -rf python/src/bungeegum.egg-info
-	rm -rf python/src/bungeegum/$(APK)
-	rm -rf build
+	@for path in $(CLEAN_PATHS); do \
+		rm -rf $$path; \
+	done
 
-dist-clean: clean
+docker-clean: clean
 	docker image rm $(BUILD_IMAGE) -f
 
-all: dev app python
+all: dev app

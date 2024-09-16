@@ -6,6 +6,8 @@ import sys
 import time
 import typing
 
+from bungeegum import __version__
+
 import adbutils
 import frida
 import importlib_resources as pkg_resources
@@ -46,6 +48,9 @@ def parse_args() -> argparse.Namespace:
     )
     group.add_argument(
         "-e", "--elf", type=str, help="ELF file to execute on the device"
+    )
+    group.add_argument(
+        "-v", "--version", action="store_true", help="Print version and exit"
     )
 
     parser.add_argument(
@@ -88,6 +93,7 @@ def get_device(device_id: typing.Optional[str]) -> adbutils.AdbDevice:
     return target_device
 
 
+# pylint: disable=too-many-arguments
 def install_and_attach(
     device: adbutils.AdbDevice,
     frida_device: FridaDevice,
@@ -142,11 +148,16 @@ def install_and_attach(
     )
 
 
+# pylint: disable=too-many-statements
 def main() -> int:
     """Run a BG session"""
     ret = 1
 
     args = parse_args()
+
+    if args.version:
+        print(__version__)
+        return 0
 
     adb_device = get_device(args.device)
     logging.debug("Found adb device: %s", adb_device.serial)

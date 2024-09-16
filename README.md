@@ -9,13 +9,13 @@ exploit.
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - [Docker](https://docs.docker.com/get-docker/)
 
 ## Install
 
-Note: Bungeegum is developed on and regularly tested with Ubuntu 18.04 and
-Python 3.8. Other distributions and versions may work, but are currently
+Note: Bungeegum is developed on and regularly tested with Ubuntu 22.04 and
+Python 3.10 Other distributions and versions may work, but are currently
 untested.
 
 1. Clone the repository
@@ -23,9 +23,9 @@ untested.
 2. Install dependencies
 
     ```sh
-    sudo apt-get update
-    sudo apt-get install python3-venv python3.8-venv make wget xz-utils -y
-    python3.8 -m venv venv
+    sudo apt update
+    sudo apt install python3-venv python3.10-venv make wget xz-utils -y
+    python3.10 -m venv venv
     source venv/bin/activate
     (venv) pip install --upgrade pip
     ```

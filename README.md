@@ -14,9 +14,9 @@ exploit.
 
 ## Install
 
-Note: Bungeegum is developed on and regularly tested with Ubuntu 22.04 and
-Python 3.10 Other distributions and versions may work, but are currently
-untested.
+Bungeegum is developed and regularly tested on Ubuntu 22.04 with Python
+3.10. It has also been successfully built on Ubuntu 18.04 with Python 3.8.0.
+Other distributions and Python versions may work, but are currently untested.
 
 1. Clone the repository
 

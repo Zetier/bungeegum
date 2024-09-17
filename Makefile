@@ -72,6 +72,9 @@ test:
 		echo "A single arm64-v8a device must be attached via adb to run tests"; \
 		exit 1; \
 	fi
+	@if adb shell pm list packages $(PKG_NAME) | grep -q $(PKG_NAME); then \
+		adb uninstall $(PKG_NAME); \
+	fi
 	@for cmd in $(TEST_COMMANDS); do \
 		eval $$cmd; \
 		ret=$$?; \

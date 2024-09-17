@@ -38,7 +38,7 @@ untested.
 
 ## Supported Android Versions
 
-Bungeegum has been tested successfully on Android 7, 9, 11, and 12.
+Bungeegum has been tested successfully on Android 7, 9 - 13.
 
 ## Usage
 

@@ -118,7 +118,7 @@ def install_and_attach(
         logging.info("App package not installed. Attempting to install...")
         ref = pkg_resources.files("bungeegum") / apk_path
         with pkg_resources.as_file(ref) as path:
-            device.install(str(path))
+            device.install(str(path), flags=["-r", "-t", "-g"])
         time.sleep(5)  # Give some time for the package manager to finish its work
 
     retry_count = 0

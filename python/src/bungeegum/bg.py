@@ -6,12 +6,12 @@ import sys
 import time
 import typing
 
-from bungeegum import __version__
-
 import adbutils
 import frida
 import importlib_resources as pkg_resources
 from frida.core import Device as FridaDevice
+
+from bungeegum import __version__
 
 logging.basicConfig(level=logging.INFO)
 

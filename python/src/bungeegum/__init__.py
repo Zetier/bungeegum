@@ -1,3 +1,5 @@
+"""Bungeegum: Android in memory execution toolkit"""
+
 __version__ = "unknown"
 try:
     from _version import __version__

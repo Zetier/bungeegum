@@ -27,6 +27,7 @@ jobs:
   pylint:
     runs-on: ubuntu-latest
     name: pylint
+    steps:
     - uses: actions/checkout@v1
     - name: pylint
       uses: docker://linedwell/pylint:py3

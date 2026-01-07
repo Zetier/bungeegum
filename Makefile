@@ -6,10 +6,12 @@ ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 VERSION := 0.1.0
 
 PKG_NAME := com.zetier.bungeegum
-APK := $(PKG_NAME)-debug.apk
+APK_API21 := $(PKG_NAME)-debug-api21.apk
+APK_API24 := $(PKG_NAME)-debug-api24.apk
 LIB_DEPS := build/dep/lib
 GRADLE_BUILD := gradle assembleDebug -g gradle_out
-APK_PATH := $(ROOT_DIR)/android_app/$(PKG_NAME)/build/outputs/apk/debug/$(APK)
+APK_PATH := $(ROOT_DIR)/android_app/$(PKG_NAME)/build/outputs/apk/debug/$(PKG_NAME)-debug.apk
+BUILD_GRADLE := $(ROOT_DIR)/android_app/$(PKG_NAME)/build.gradle
 FRIDA_DOWNLOADS := https://github.com/frida/frida/releases/download
 FRIDA_VERSION := 16.4.10
 
@@ -41,11 +43,12 @@ $(APP_JNI_DIR)/%/$(GADGET_JNI_LIB): $(LIB_DEPS)/$(GADGET_ARM64_SO) $(LIB_DEPS)/$
 		cp $(LIB_DEPS)/$(GADGET_ARM64_SO) $@; \
 	fi
 
-$(APK_PATH): $(foreach arch,$(ARCHES),$(APP_JNI_DIR)/$(arch)/$(GADGET_JNI_LIB))
+# Build API variants
+build/$(PKG_NAME)-debug-api%.apk: $(BUILD_GRADLE).api% $(foreach arch,$(ARCHES),$(APP_JNI_DIR)/$(arch)/$(GADGET_JNI_LIB)) | build
+	@echo "Building API $* variant..."
+	@cp $< $(BUILD_GRADLE)
 	docker run -it -u $(CURRENT_UID_GID) -v "$(ROOT_DIR)"/android_app:/app -w /app $(BUILD_IMAGE) $(GRADLE_BUILD)
-
-bungeegum/$(APK): $(APK_PATH)
-	@cp $(APK_PATH) python/src/bungeegum/
+	@cp $(APK_PATH) $@
 
 build:
 	@mkdir -p build
@@ -56,7 +59,9 @@ build/.dockerfile_timestamp : Dockerfile | build
 
 dev: build/.dockerfile_timestamp
 
-app: bungeegum/$(APK)
+# Copy both variants to Python package
+app: build/$(APK_API21) build/$(APK_API24)
+	@cp $^ python/src/bungeegum/
 
 python:
 	VERSION=$(VERSION) FRIDA_VERSION=$(FRIDA_VERSION) python3 -m pip install ./python
@@ -90,7 +95,9 @@ clean:
 	rm -rf android_app/gradle_out
 	rm -rf $(APP_JNI_DIR)/*
 	rm -rf python/src/bungeegum.egg-info
-	rm -rf python/src/bungeegum/$(APK)
+	rm -f python/src/bungeegum/$(APK_API21)
+	rm -f python/src/bungeegum/$(APK_API24)
+	rm -f $(BUILD_GRADLE)
 	rm -rf build
 
 dist-clean: clean

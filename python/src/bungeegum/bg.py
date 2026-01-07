@@ -13,7 +13,8 @@ from frida.core import Device as FridaDevice
 
 logging.basicConfig(level=logging.INFO)
 
-APK_DBG = "com.zetier.bungeegum-debug.apk"
+APK_DBG_API21 = "com.zetier.bungeegum-debug-api21.apk"
+APK_DBG_API24 = "com.zetier.bungeegum-debug-api24.apk"
 EXEC_SCRIPT = "fork_exec.js"
 SHELLCODE_SCRIPT = "run_shellcode.js"
 BG_PKG = "com.zetier.bungeegum"
@@ -22,6 +23,31 @@ BG_PY_PKG = "bungeegum"
 MAIN_ACTIVITY = BG_PKG + "/.BgActivity"
 LOCALHOST = "127.0.0.1"
 DEFAULT_ADB_SERVER_PORT = 5037
+
+
+def select_apk(device: adbutils.AdbDevice) -> str:
+    """
+    Select the appropriate APK variant based on device SDK version.
+
+    Args:
+        device: An AdbDevice object representing the ADB device.
+
+    Returns:
+        The APK filename to use.
+    """
+    try:
+        sdk_version = int(device.shell("getprop ro.build.version.sdk").strip())
+    except (ValueError, adbutils.errors.AdbError) as e:
+        raise RuntimeError("Failed to determine device SDK version.") from e
+
+    logging.info("Device SDK version: %d", sdk_version)
+
+    if sdk_version >= 24:
+        logging.debug("Using API 24+ APK variant")
+        return APK_DBG_API24
+    else:
+        logging.debug("Using API 21-23 APK variant")
+        return APK_DBG_API21
 
 
 def parse_args() -> argparse.Namespace:
@@ -154,8 +180,9 @@ def main() -> int:
     frida_device = frida.get_device(adb_device.serial, timeout=10)
     logging.info("Created Frida device: %r", frida_device)
 
+    apk_dbg = select_apk(adb_device)
     session = install_and_attach(
-        adb_device, frida_device, APK_DBG, BG_PKG, BG_APP_NAME, 10
+        adb_device, frida_device, apk_dbg, BG_PKG, BG_APP_NAME, 10
     )
 
     logging.info("Successfully connected to target process")

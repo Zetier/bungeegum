@@ -3,6 +3,7 @@
 import argparse
 import logging
 import sys
+import threading
 import time
 import typing
 
@@ -199,24 +200,40 @@ def main() -> int:
 
     script = session.create_script(contents)
 
+    script_done = threading.Event()
+
     # Callback for when we receive a message from Frida script
-    def on_message(message: typing.Dict[str, typing.Any], _data: str) -> None:
+    def on_message(message: typing.Dict[str, typing.Any], _data: typing.Optional[bytes]) -> None:
         # Use ret var from outer function
         nonlocal ret
         logging.debug("Received message from JS: %s", message)
 
-        if message.get("payload") == "status":
+        if message.get("type") == "error":
+            logging.error("Frida script error: %s", message)
+            script_done.set()
+            return
+
+        payload = message.get("payload")
+
+        if payload == "status":
             logging.debug("Sending args")
             script.post({"type": "args", "payload": script_args})
 
-        elif isinstance(message.get("payload"), int):
+        elif isinstance(payload, dict) and payload.get("type") == "stdout":
+            if _data:
+                sys.stdout.buffer.write(_data)
+                sys.stdout.buffer.flush()
+
+        elif isinstance(payload, int):
             logging.debug("Received result from JS: %s", message["payload"])
             ret = message.get("payload")  # type: ignore
+            script_done.set()
 
     script.on("message", on_message)
     # Set up script to send message to on_message
     logging.debug("Running Frida script in target app")
     script.load()
+    script_done.wait()
     session.detach()
     logging.info("Returned status: %d", ret)
 

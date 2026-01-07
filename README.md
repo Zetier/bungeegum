@@ -60,6 +60,9 @@ optional arguments:
                         Optional args to pass to the ELF file
 ```
 
+When an ELF is executed, its `stdout`/`stderr` streams are mirrored back to the
+`bungeegum` CLI.
+
 ## Examples
 
 - Run an ELF from the host on the device:

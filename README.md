@@ -38,7 +38,7 @@ Other distributions and Python versions may work, but are currently untested.
 
 ## Supported Android Versions
 
-Bungeegum has been tested successfully on Android 7, 9 - 13.
+Bungeegum has been tested successfully on Android 7, 9 - 16.
 
 ## Usage
 

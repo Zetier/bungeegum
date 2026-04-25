@@ -1,3 +1,5 @@
+import Java from 'frida-java-bridge';
+
 // Send message to Python script to initiate IPC
 send('status');
 
@@ -9,12 +11,12 @@ var op = recv('args', function (value) {
 op.wait();
 
 // Get required library symbols for CModule
-var fork_ptr = Module.findExportByName('libc.so', 'fork');
-var alog_ptr = Module.findExportByName('liblog.so', '__android_log_print');
-var waitpid_ptr = Module.findExportByName('libc.so', 'waitpid');
-var errno_ptr = Module.findExportByName('libc.so', '__errno');
-var strerror_ptr = Module.findExportByName('libc.so', 'strerror');
-var _exit_ptr = Module.findExportByName('libc.so', '_exit');
+var fork_ptr = Process.getModuleByName('libc.so').getExportByName('fork')
+var alog_ptr = Process.getModuleByName('liblog.so').getExportByName('__android_log_print')
+var waitpid_ptr = Process.getModuleByName('libc.so').getExportByName('waitpid')
+var errno_ptr = Process.getModuleByName('libc.so').getExportByName('__errno')
+var strerror_ptr = Process.getModuleByName('libc.so').getExportByName('strerror')
+var _exit_ptr = Process.getModuleByName('libc.so').getExportByName('_exit')
 
 var shellcode_ptr;
 var shellcode_main_ptr;

@@ -4,11 +4,12 @@ dependencies {
     implementation fileTree(dir: 'libs', include: '*.jar')
 }
 android {
-    compileSdkVersion 21
+    namespace 'com.zetier.bungeegum'
+    compileSdkVersion 24
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 21
+        minSdkVersion 24
+        targetSdkVersion 24
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a"
         }

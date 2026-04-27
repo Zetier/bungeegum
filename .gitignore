@@ -4,4 +4,7 @@
 build
 bungeegum.egg-info
 gradle_out/
+test/exit42/build/
 venv
+__pycache__/
+*.pyc

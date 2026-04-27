@@ -5,7 +5,7 @@ FROM gradle:6.5-jdk8
 
 ENV SDK_HOME /usr/local
 RUN apt-get --quiet update --yes
-RUN apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 curl
+RUN apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 curl make
 RUN apt-get --quiet install --yes libqt5widgets5 usbutils
 
 ENV APP_HOME=/app
@@ -13,7 +13,8 @@ ENV APP_HOME=/app
 # android sdk|build-tools|image
 ENV ANDROID_TARGET_SDK="android-33" \
     ANDROID_BUILD_TOOLS="30.0.2" \
-    ANDROID_SDK_TOOLS="7583922"
+    ANDROID_SDK_TOOLS="7583922" \
+    ANDROID_NDK_VERSION="25.2.9519653"
 ENV ANDROID_SDK_URL https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS}_latest.zip
 RUN curl -sSL "${ANDROID_SDK_URL}" -o android-sdk-linux.zip \
     && unzip android-sdk-linux.zip -d /opt/android-sdk-linux \
@@ -29,6 +30,10 @@ RUN echo yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_H
 RUN echo yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_HOME} "tools" "platform-tools"
 RUN echo yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_HOME} "build-tools;${ANDROID_BUILD_TOOLS}"
 RUN echo yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_HOME} "platforms;${ANDROID_TARGET_SDK}"
+RUN echo yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_HOME} "ndk;${ANDROID_NDK_VERSION}"
+
+ENV ANDROID_NDK_HOME ${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}
+ENV NDK ${ANDROID_NDK_HOME}
 
 RUN chmod -R 777 $ANDROID_HOME
 RUN chmod -R 777 /home/gradle
